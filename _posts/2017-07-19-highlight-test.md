@@ -1,11 +1,13 @@
 ---
 title: Highlight Test
+publised: false
 categories:
  - Test
 tags:
 ---
 
 This is a highlight test.
+<!--more-->
 
 # Normal block
 
