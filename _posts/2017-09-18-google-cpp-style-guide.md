@@ -2,7 +2,7 @@
 layout: post
 title: 【Google C++ 风格指南】之命名
 date: 2017-09-18 22:01:00
-categraies:
+categories:
 - CodeStyle
 tags:
 - CodeStyle
