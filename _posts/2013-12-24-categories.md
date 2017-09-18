@@ -11,6 +11,7 @@ categories:
 - C++
 - ToDoList
 - Algorithm
+- 编程风格
 ---
 
 This post contains 3 categories. Make sure your theme can
