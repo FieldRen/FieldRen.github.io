@@ -11,6 +11,7 @@ image: http://gastonsanchez.com/images/blog/mathjax_logo.png
 One of the rewards of switching my website to [Jekyll](http://jekyllrb.com/) is the
 ability to support **MathJax**, which means I can write LaTeX-like equations that get nicely displayed in a web browser, like this one \\(\sqrt{\frac{n!}{k!(n-k)!}} \\) or this one \\( x^2 + y^2 = r^2 \\).
 <!--more-->
+
 <img class="centered" src="https://www.mathjax.org/badge/mj-logo.svg" />
 
 ### What's MathJax?

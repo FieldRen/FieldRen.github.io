@@ -26,3 +26,13 @@ void cv::ximgproc::thinning(InputArray  src,
                             int         thinningType=THINNING_ZHANGSUEN
                            )
 ```
+
+用二进制细化操作，实现输入图像的骨架化。
+
+该函数用Zhang-Suen的算法提取二值图像的骨架。
+
+### 参数
+
+- src：输入图像，8-bit 单通道图像
+- dst：输出图像
+- thinningType：定义使用哪种细化算法 包括 THINNING_ZHANGSUEN 和 THINNING_GUOHALL
