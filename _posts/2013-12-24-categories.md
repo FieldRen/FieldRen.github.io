@@ -4,14 +4,13 @@ date: 2013-12-24 23:30:09
 published: false
 comments: false
 categories:
-- Foo
-- Bar
-- Baz
 - Opencv
 - C++
 - ToDoList
 - Algorithm
 - CodeStyle
+- Qt
+- 图像处理
 ---
 
 This post contains 3 categories. Make sure your theme can
