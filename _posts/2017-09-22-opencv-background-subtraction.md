@@ -45,7 +45,7 @@ tags:
 
 我们需要做的第一件事就是实例化一个行迭代器对象，通过`cv::LineIterator`结构体来干这件事。
 
-```C++
+```c++
 cv::LineIterator::LineIterator(
   const cv::Mat& image,            //需要被迭代的图像
   cv::Point      pt1,              //迭代器的初始点
@@ -61,7 +61,7 @@ cv::LineIterator::LineIterator(
 
 有这么方便的一个工具在手头，我们可以从一个文件中提取一些数据。Example 15-1的程序从一个视频文件中生成Figure 15-1中所示的数据。
 
-```C++
+```c++
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
@@ -127,7 +127,7 @@ int main( int argc, char** argv ) {
 ```
 在 Example 15-1中，我们一个像素一个像素地移动，一次移动一个像素，一次处理一个像素。另一种常见做法是创建一个缓冲区，将整行拷贝到缓冲区，再去处理缓冲区的数据。这种情况下，缓冲区副本看起来像以下内容：
 
-```C++
+```c++
 cv::LineIterator it( rawImage, pt1, pt2, 8 );
 
 vector<cv::Vec3b> buf( it.count);
@@ -144,7 +144,7 @@ for (int i = 0; i < it.count; i++,++it) {
 ## Frame Differencing
 最简单的背景差分方法就是从一帧图像（可能是后面几帧）里减去另一帧图像，然后标出足够大的差值作为前景。这个过程可以抓取移动目标的边缘。为简单起见，假设我们有三个单通道图像：`frameTime1`,`frameTime2`和`frameForeground`。`frameTime1`是过去的灰度图像，`frameTime2`是当前的灰度图像。我们可以根据下面的代码来检测在`frameForeground`中前景差的绝对值：
 
-```C++
+```c++
 cv::absdiff(
   frameTime1,            // 第一个输入矩阵
   frameTime2,            // 第二个输入矩阵
@@ -154,7 +154,7 @@ cv::absdiff(
 ```
 由于像素值经常有一些噪声和波动，我们应该忽略一些小的差值（比如说忽略小于15的差值），标记出那些比较大的差值：
 
-```C++
+```c++
 cv::threshold(
   frameForeground,          // 输入图像
   frameForeground,          // 输出图像
@@ -187,7 +187,7 @@ cv::threshold(
 
 *Example 15-2. Learning a background model to identify foreground pixels*
 
-```C++
+```c++
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <fstream>
@@ -218,7 +218,7 @@ float Icount;
 ```
 接下来，我们创建一个单独的调用来分配所有必要的中间图像。方便起见，我们从视频中拿出一个单独的图像，用它来传递中间图像的尺寸：
 
-```C++
+```c++
 // I只是一个样本图像
 // (passed in for sizing)
 //
@@ -242,7 +242,7 @@ void AllocateImages( const cv::Mat& I) {
 ```
 在接下来的一部分代码中，我们学习累加的背景图像以及帧间图像差（用于学习图像像素标准差的一种计算上更快速的代理（近似））绝对值的累加和。这种方法通常需要30到1000帧图像，有时在每一秒只取几帧图像，有时取所有可用的帧。这个程序被3彩色通道8bit的图像调用。
 
-```C++
+```c++
 // Learn the background statistics for one more frame
 // I is a color sample of the background, 3-channel, 8u
 //
@@ -265,7 +265,7 @@ void accumulateBackground( cv::Mat& I ) {
 
 一旦我们累加了足够的图像帧，就将其变换成背景的统计模型；也就是说，计算每个像素的期望和标准差：
 
-```C++
+```c++
 void createModelsfromStats() {
   IavgF  * =(1.0/Icount);
   IdiffF * =(1.0/Icount);
@@ -281,7 +281,7 @@ void createModelsfromStats() {
 在这部分，通过除以累加图像的总数，我们用`cv::Mat::operator*=()`来计算平均背景和图像差的绝对值。预防起见，我们要保证平均差值的图像数量至少是1；我们需要在计算前景背景阈值时缩放这个因子，并希望避免这两个阈值变得相等的退化情况。
 
 接下来的第二个程序，`setHighThreshold()` 和`setLowThreshold()`是*utility functions*，它们根据帧间平均绝对差（FFAAD）来设置一个阈值。FFAAD是我们判断所观察到的变化是否显著的一个基本指标。例如，调用`setHighThreshold(7.0)`，修正一个阈值，使得对于该像素的平均值高于 FFAAD 的7倍的任何值被认为是前景；同理，`setLowThreshold(6.0)`设置一个阈值范围，该范围使得对于该像素的平均值低于FFAAD的6倍。围绕当前像素点在这个范围内，目标被认为是背景。这些阈值函数如下：
-```C++
+```c++
 void setHighThreshold( float scale) {
   IhiF = IavgF + (IdiffF * scale);
   cv::split( IhiF, Ihi );
@@ -297,7 +297,7 @@ void setLowThreshold( float scale ) {
 
 一旦我们有了背景模型，连同高阈值和低阈值，我们用这些来把图像分割为前景和背景。我们通过调用以下代码来执行分割任务：
 
-```C++
+```c++
 // Create a binary: 0,255 mask; 255表示前景像素
 // I 输入图像，3通道，8u
 // Imask Mask image to be created, 1通道 8u
@@ -330,7 +330,7 @@ void backgroundDiff(cv::Mat& I, cv::Mat& Imask) {
 
 将它们都放在一起，我们可以定义main()函数，来读取视频并且建立背景模型。例如，首先我们在训练模式中跑视频，直到用户敲了空格键，之后程序工作在检测前景模式中，检测出的前景目标用红色高亮标出：
 
-```C++
+```c++
 void help(argv) {
   cout << "\n"
   << "Train a background model on incomimng video, then run the model\n"
@@ -405,7 +405,7 @@ int main( int argc, char** argv ){
 
 下面的代码假定存在几个全局变量：
 
-```C++
+```c++
 cv::Mat sum;
 cv::Mat sqsum;
 int image_count = 0;
@@ -415,7 +415,7 @@ int image_count = 0;
 
 正如我们在之前的例子所看到的那样，计算像素均值的最好方法就是用`cv::Mat::operator+=()`把所有的加起来，然后再除以图像的总数来获得均值：
 
-```C++
+```c++
 void accumulateMean(cv::Mat& I) {
   if (sum.empty) {
     sum = cv::Mat::zeros(I.size(), CV_32FC(I.channels()));
@@ -428,7 +428,7 @@ void accumulateMean(cv::Mat& I) {
 
 之前的函数，`accumulateMean()`，将会被每个输入图像所调用。一旦所有将要被用于背景建模的图像被计算完毕，你就可以调用下一个函数了，即`computeMean()`。结果是可以得到一幅包含整个输入图片集的每个像素均值的单一图像。
 
-```C++
+```c++
 cv::Mat& computeMean(cv::Mat& mean){
   mean = sum / image_count;
 }
@@ -439,7 +439,7 @@ cv::Mat& computeMean(cv::Mat& mean){
 OpenCV 提供其它函数，基本上和使用`cv::Mat::operator+=()`类似，但有两个重要区别。第一，它会自动执行`cv::Mat::convertTo()`的功能（从而消除了对scratch image的需求）；第二，它允许使用图像mask。这个函数是`cv::accumulate()`。当计算一个背景模型时，使用图像mask是非常有用的，因为你经常有一些其他信息来判断图像的某些部分不应该包含在背景模型中。例如，你可能正在为一个高速公路背景建模，或者其它一些均匀着色区域，我们可以根据颜色立即判定某些目标不属于背景。~~这种对物体的分类，在现实世界中很有帮助，在现实世界中，在完全没有前景对象的情况下很少或没有机会进入场景。~~（烂翻译）This sort of thing can be very helpful in a real-world situation in which there is little or no opportunity to get access to the scene in the complete absence of Foreground objects.
 
 累加函数的原型：
-```C++
+```c++
 void accumulate(
   cv::InputArray        src,                 // Input, 1 or 3 channels, U8 or F32
   cv::InputOutputArray  dst,                 // 输出图像，F32 or F64
@@ -450,7 +450,7 @@ void accumulate(
 
 有了`cv::accumulate()`，前面的`accumulateMean()`函数可以被简化成:
 
-```C++
+```c++
 void accumulateMean(cv::Mat& I) {
   if ( sum.empty ) {
     sum = cv::Mat::zeros( I.size(), CV_32FC(I.channels()));
@@ -469,7 +469,7 @@ $$ acc(x,y) = (1-\alpha)\cdot acc(x,y)+\alpha \cdot image(x,y) $$
 对于常数 $\alpha$，*running average* 不等于用`cv::accumulate()`或者`cv::Mat::operator+=()`累加的结果。为了说明这点，只需要考虑下面一种情况：将3个数（2，3和4）进行相加，$\alpha$ 设为0.5。如果我们用`cv::accumulate()`来累加，和是9，平均值是3。如果用`cv::accumulateWeighted`，第一个和为 $0.5 \cdot 2 + 0.5 \cdot 3 = 2.5 $，再加上第三个变量，结果是$0.5 \cdot 2.5 + 0.5 \cdot 4 = 3.25$。第二种情况的均值更大的原因是越靠近当前的值其贡献越大，权重因子更大。这种*running average* 也叫做*tracker*。你可以考虑参数 $\alpha$ 设置前一帧的影响所需的时间尺度 - 越小，过去帧的影响消失得越快。
 
 为了累加所有图像的*running averages*，我们用OpenCV函数`cv::accumulateWeighted()`:
-```C++
+```c++
 void accumulateWeighted(
   cv::InputArray         src,                  // Input, 1 or 3 channels, U8 or F32
   cv::InputOutputArray   dst,                  // Result image, F32 or F64
@@ -489,7 +489,7 @@ $$ \sigma^2=\frac{1}{N} \sum_{i=0}^{N-1}(x_i-\overline x)^2 $$
 $$ \sigma^2=(\frac 1 N \sum_{i=0}^{N-1}x_i^2)-(\frac 1 N \sum_{i=0}^{N-1}x_i)^2 $$
 
 用这个形式，我们只需要传递一次图像既可以计算每个像素的值也可以计算它们的平方。然后，每个像素的方差就是平方的均值减去均值的平方。基于这个思想，我们可以定义一个累加函数和一个计算均值的函数。和均值一样，第一件要做的事就是对输入图像逐个元素的求平方，然后再用其它函数（比如`sqsum += I.mul(I)`）去计算方差。然而，这种方法也有缺点，最显著的一个缺点是`I.mul(I)`不能进行任何内置类型的转换（正如我们在`cv::Mat::operator+=()`操作中也做不到的那样）。因此，一个8-bit的数组元素，一被平方，将不可避免的导致泄漏。然而，和`cv::accumulate()`一样，OpenCV 给我们提供了一个函数，可以在一个方便的包里做到所有我们所需要的事情，即`cv::accumulateSquare()`:
-```C++
+```c++
 void accumulateSquare(
   cv::InputArray              src,                 // 输入图像，1 或 3 通道，U8 或者 F32
   cv::InputOutputArray        dst,                 // 输出图像，F32 或者 F64
@@ -498,7 +498,7 @@ void accumulateSquare(
 ```
 有了`cv::accumulateSquare()`的帮助，我们可以写一个函数来计算我们要得到方差所需要的信息：
 
-```C++
+```c++
 void accumulateVariance(cv::Mat& I) {
   if (sum.empty) {
     sum = cv::Mat::zeros( I.size(), CV_32FC(I.channels()));
@@ -511,7 +511,7 @@ void accumulateVariance(cv::Mat& I) {
 ```
 相应的计算函数如下：
 
-```C++
+```c++
 // note that 'variance' is sigma^2
 //
 void computeVariance(cv::Mat& variance)
@@ -542,7 +542,7 @@ $$\sideset{}{_{x,y}} \sum =  \sideset{}{_{y,x}} \sum$$
 
 实际上，最好的方法就是简单地使用我们之前已经建立的代码来计算方差，然后分别计算三个新的元素（$ \sideset{}{x,y} \sum$的非对角线元素）。看看协方差的形式就知道，`cv::accumulateSquare()`在这里不管用，因为我们需要计算$x_i \cdot y_i$。OpenCV中的`cv::accumulateProduct()`这个函数可以做到这点。
 
-```C++
+```c++
 void accumulateProduct(
   cv::InputArray         src1,                 // 输入图像，1 通道或者 3 通道，U8 或者 F32
   cv::InputArray         src2,                 // 输入图像，1 通道或者 3 通道，U8 或者 F32
@@ -556,7 +556,7 @@ void accumulateProduct(
 
 *Example 15-3. Computing the off-diagonal elements of a covariance model*
 
-```C++
+```c++
 vector<cv::Mat> planes(3);
 vector<cv::Mat> sums(3);
 vector<cv::Mat> xysums(6);
@@ -598,7 +598,7 @@ void accumulateCovariance(cv::Mat& I) {
 ```
 相应的计算函数也是我们之前用来计算方差的函数的轻微变种。
 
-```C++
+```c++
 // note that `variance` is sigma^2
 //
 void computeVariance(
